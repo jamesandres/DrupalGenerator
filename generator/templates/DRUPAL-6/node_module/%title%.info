@@ -1,0 +1,7 @@
+; $Id$
+name = %Title%
+description = "%Title% was created by the Drupal generate utility."
+; dependencies[] = image
+package = Extras
+version = VERSION
+core = 6.x

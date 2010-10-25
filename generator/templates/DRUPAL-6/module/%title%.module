@@ -1,0 +1,211 @@
+<?php
+// $Id$
+
+/**
+ * @file %title%.module
+ *  %Title% was created by the Drupal generate utility.
+ */
+
+/**
+ * Implementation of hook_theme()
+ */
+function %title%_theme($existing, $type, $theme, $path) {
+  return array(
+    '%title%' => array(
+      'template' => '%title%',
+      'arguments' => array(),
+    ),
+  );
+}
+
+/**
+ * Implementation of hook_menu().
+ */
+function %title%_menu() {
+  $items = array();
+
+  $items['%title%'] = array(
+    'title' => '%Title%s',
+    'page callback' => '%title%_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => '%title%.pages.inc',
+  );
+  $items['admin/settings/%title%'] = array(
+    'title' => '%Title% settings',
+    'description' => 'Control %title%s and their hierarchy and change %title% settings.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('%title%_admin'),
+    'access arguments' => array('access administration pages'),
+    'file' => '%title%.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implementation of hook_nodeapi().
+ */
+function %title%_nodeapi(&$node, $op, $teaser, $page) {
+  switch ($op) {
+    case 'view':
+      // Create breadcrumbs, add extra content to the $node and perform other
+      // routine tasks just before the node is displayed.
+
+      // $breadcrumb = array();
+      // $breadcrumb[] = l(t('Home'), NULL);
+      // $breadcrumb[] = l('%Title%', '%title%');
+      // drupal_set_breadcrumb($breadcrumb);
+      //
+      // if (!$teaser) {
+      //   $node->content['%title%_extra'] = array(
+      //     '#value' => '<p>' . t('Extra content for %title% module.') . '</p>',
+      //     '#weight' => 100,
+      //   );
+      // }
+      break;
+
+    case 'prepare':
+      // The node is about to be shown on the add/edit form.  Modify
+      // $node as needed.
+      break;
+
+    case 'validate':
+      // Validate $node and use the form_set_error() function to display
+      // errors to the user.
+      break;
+
+    case 'presave':
+      // Alter $node before it gets saved into the database
+      break;
+
+    case 'update':
+      // Update some data into the database, generally relating to $node.
+      break;
+
+    case 'insert':
+      // Insert some data into the database, generally relating to $node.
+      break;
+
+    case 'delete revision':
+      // A revision for a node is about to be deleted, remove any dependant
+      // records.
+      break;
+
+    case 'delete':
+      // A node is just about to be deleted, including ALL revisions.  Remove
+      // any dependant records from the tables belonging to this module.
+      break;
+
+    case 'load':
+      // Get some data from the database and return it as an array.
+      break;
+  }
+
+  return;
+}
+
+/**
+ * Implementation of hook_form_alter().
+ */
+function %title%_form_alter(&$form, $form_state, $form_id) {
+  if ($form_id == 'user_register') {
+    $form['%title%_extra_attr'] = array(
+      '#type' => 'textfield',
+      '#title' => t('%Title% extra attribute'),
+      '#size' => 60,
+      '#maxlength' => 255,
+      '#required' => FALSE,
+    );
+  }
+}
+
+/**
+ * Implementation of hook_user()
+ **/
+function %title%_user($op, &$edit, &$account, $category = NULL) {
+  switch ($op) {
+    case 'login':
+      // The user just logged in.
+      break;
+    case 'logout':
+      // The user just logged out.
+      break;
+    case 'load':
+      // The user just logged out. and insert additional information
+      // into the user object. 
+      break;
+    case 'view':
+      // The user's account information is being displayed. The module
+      // should format its custom additions for display, and add them
+      // to the $account->content array.
+      break;
+    case 'validate':
+      // The user account is about to be modified. The module should
+      // validate its custom additions to the user object, registering
+      // errors as necessary.
+      break;
+    case 'insert':
+      // The user account is being added. The module should save its
+      // custom additions to the user object into the database and
+      // set the saved fields to NULL in $edit.
+      break;
+    case 'update':
+      // The user account is being changed. The module should save
+      // its custom additions to the user object into the database
+      // and set the saved fields to NULL in $edit.
+      break;
+    case 'delete':
+      // The user account is being deleted. The module should remove
+      // its custom additions to the user object from the database.
+      break;
+  }
+}
+
+/**
+ * Implementation of hook_block().
+ */
+function %title%_block($op = 'list', $delta = 0, $edit = array()) {
+  switch ($op) {
+    case 'list':
+      $blocks['latest_items']['info'] = t('Latest %title% items');
+      return $blocks;
+
+    case 'configure':
+      $form['%title%_block_num_'. $delta] = array(
+        '#type' => 'select',
+        '#title' => t('Number of items'),
+        '#default_value' => variable_get('%title%_block_num_'. $delta, '5'),
+        '#options' => drupal_map_assoc(array(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20))
+      );
+      return $form;
+
+    case 'save':
+      variable_set('%title%_block_num_'. $delta, $edit['%title%_block_num_'. $delta]);
+      break;
+
+    case 'view':
+      if (!user_access('access content')) {
+        return;
+      }
+
+      switch ($delta) {
+        case 'latest_items':
+          $title = t('Latest %title% items');
+          $sql = db_rewrite_sql(
+            "SELECT nid, title, 
+             FROM {node}
+             ORDER BY updated DESC"
+          );
+          $result = db_query_range($sql, variable_get('%title%_block_num_' . $delta, '5'));
+          $content = node_title_list($result);
+          break;
+      }
+
+      if (!empty($content)) {
+        $block['subject'] = $title;
+        $block['content'] = $content . theme('more_link', url('%title%'), t('Read the latest %title% items.'));
+        return $block;
+      }
+  }
+}

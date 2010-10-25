@@ -1,0 +1,144 @@
+#!/usr/bin/env ruby
+#
+# == Synopsis
+#   Drupal code generation utility.  Removes some drudgery.
+#
+# == Examples
+#   Most basic usage, generate an empty module.
+#     generate module sites/all/modules/my_module
+#
+#   Other examples:
+#     Later!! ..
+#
+# == Usage
+#   generate [options] {profile|module|node_module} PATH
+#
+#   For help use: generate -h
+#
+# == Options
+#   -h, --help          Displays help message
+#   -v, --version       Display the version, then exit
+#   -q, --quiet         Output as little as possible, overrides verbose
+#   -V, --verbose       Verbose output
+#   -5, --drupal-5      Use Drupal 5 templates
+#   -6, --drupal-6      Use Drupal 6 templates, this is the default
+#   -y, --yes           Yes to all questions, ie: to overwrite files
+#
+# == Author
+#   James Andres
+#
+# == Copyright
+#   Based on "Simple Ruby command-line application skeleton" by Todd Werth
+#   http://blog.infinitered.com/entries/show/5
+#
+#   Additions by James Andres are all under the GPL Version 3 license.
+
+require 'yaml'
+require 'fileutils'
+require 'optparse'
+require 'rdoc/ri/ri_paths' # Workaround for bug in Ruby < 1.8.5
+require 'rdoc/usage'
+
+# Add the current installation directory to the ruby search path
+# see: http://blog.8thlight.com/articles/2007/10/08/micahs-general-guidelines-on-ruby-require
+BASEPATH = File.expand_path(File.dirname(__FILE__))
+$: << BASEPATH
+
+require 'generator/GeneratorHelper.rb'
+
+class DrupalGenerate
+  VERSION = '0.0.1'
+
+  attr_reader :options
+
+  def initialize(arguments, stdin)
+    @arguments = arguments
+    @stdin = stdin
+
+    # Set defaults
+    @options = {
+      'verbose' => false,
+      'quiet' => false,
+      'drupal_version' => 'DRUPAL-6',
+    }
+  end
+
+  # Parse options, check arguments, then process the command
+  def run
+    if parsed_options? && arguments_valid?
+      process_arguments
+      process_command
+    else
+      output_usage
+    end
+  end
+
+  protected
+
+    def parsed_options?
+      # Specify options
+      opts = OptionParser.new
+      opts.on('-v', '--version')    { output_version ; exit 0 }
+      opts.on('-h', '--help')       { output_help }
+      opts.on('-V', '--verbose')    { @options['verbose'] = true }
+      opts.on('-q', '--quiet')      { @options['quiet'] = true }
+      opts.on('-5', '--drupal-5')   { @options['drupal_version'] = 'DRUPAL-5' }
+      opts.on('-6', '--drupal-6')   { @options['drupal_version'] = 'DRUPAL-6' }
+      opts.on('-y', '--yes')        { @options['yes_to_all'] = TRUE }
+
+      opts.parse!(@arguments) rescue return false
+
+      process_options
+      true
+    end
+
+    # Performs post-parse processing on options
+    def process_options
+      @options['verbose'] = false if @options['quiet']
+    end
+
+    # True if required arguments were provided
+    def arguments_valid?
+      # TODO: Check if the generator chosen is valid
+      true if @arguments.length >= 2 && generator_valid?
+    end
+
+    # True if the generator is found
+    def generator_valid?
+      true if FileTest.exists?(BASEPATH + '/generator/generators/' + @arguments[0] + '.rb')
+    end
+
+    # Setup the arguments
+    def process_arguments
+      @generator = @arguments[0]
+      @path = @arguments[1]
+      @template_path = BASEPATH + "/generator/templates/" + @options['drupal_version'] + "/" + @generator
+
+      @generator_class = @generator.capitalize + "Generator"
+    end
+
+    def output_help
+      output_version
+      RDoc::usage() #exits app
+    end
+
+    def output_usage
+      RDoc::usage('usage') # gets usage from comments above
+    end
+
+    def output_version
+      puts "#{File.basename(__FILE__)} version #{VERSION}"
+    end
+
+    def process_command
+      require "generator/generators/#{@generator}.rb"
+
+      # Kinda like a reflection class
+      generator = Kernel.const_get(@generator_class).new(@options, @template_path, @path)
+      generator.run
+    end
+end
+
+# Create and run the application
+app = DrupalGenerate.new(ARGV, STDIN)
+app.run

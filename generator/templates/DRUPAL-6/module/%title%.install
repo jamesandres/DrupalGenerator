@@ -1,0 +1,45 @@
+<?php
+// $Id$
+
+/**
+ * Implementation of hook_install().
+ */
+function %title%_install() {
+  // Create tables.
+  drupal_install_schema('%title%');
+}
+
+/**
+ * Implementation of hook_uninstall().
+ */
+function %title%_uninstall() {
+  drupal_uninstall_schema('%title%');
+}
+
+/**
+ * Implementation of hook_schema().
+ */
+function %title%_schema() {
+  $schema['%title%'] = array(
+    'description' => t('Stores the relationship between nodes and %title%s.'),
+    'fields' => array(
+      'vid' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Primary Key: The {node}.vid of the node.'),
+      ),
+      'id' => array(
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+        'description' => t('Foo.'),
+      ),
+    ),
+    'primary key' => array('vid'),
+  );
+
+  return $schema;
+}

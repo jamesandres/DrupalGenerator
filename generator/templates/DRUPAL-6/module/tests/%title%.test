@@ -1,0 +1,47 @@
+<?php
+// $Id$
+
+/**
+ * Test the basic functionality of the %title% module.
+ */
+class %TiTlE%Tests extends DrupalWebTestCase {
+
+  function __construct() {
+    parent::__construct();
+  }
+
+  /**
+   * Clean out the testing environment.
+   **/
+  function setUp() {
+    parent::setUp();
+    // Any setup code goes here.
+  }
+
+  /**
+   * Clean out the testing environment.
+   **/
+  function tearDown() {
+    parent::tearDown();
+    // Any est
+  }
+
+  /**
+   * Implementation of the DrupalTestCase "get_info" method.
+   **/
+  function getInfo() {
+    return array(
+      'name' => t('%Title% Tests'),
+      'description' => t('Test the basic functionality of the %title% module.'),
+      'group' => '%Title%'
+    );
+  }
+
+  /**
+   * Basic tests of the %title% module.
+   **/
+  function test%TiTlE%() {
+    // Write tests here.
+  }
+
+}

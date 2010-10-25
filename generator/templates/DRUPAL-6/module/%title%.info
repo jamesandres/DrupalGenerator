@@ -1,0 +1,9 @@
+; $Id$
+name = %Title%
+description = "%Title% was created by the Drupal generate utility."
+; dependencies[] = cck
+; dependencies[] = panels
+; dependencies[] = views
+package = %Title0%
+version = 6.x-1.0
+core = 6.x
