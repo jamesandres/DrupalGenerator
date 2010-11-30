@@ -36,8 +36,11 @@
 require 'yaml'
 require 'fileutils'
 require 'optparse'
-require 'rdoc/ri/ri_paths' # Workaround for bug in Ruby < 1.8.5
-require 'rdoc/usage'
+
+if RUBY_VERSION.to_f < 1.9
+  require 'rdoc/ri/ri_paths' # Workaround for bug in Ruby < 1.8.5
+  require 'rdoc/usage'
+end
 
 # Add the current installation directory to the ruby search path
 # see: http://blog.8thlight.com/articles/2007/10/08/micahs-general-guidelines-on-ruby-require

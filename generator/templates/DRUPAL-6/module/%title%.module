@@ -11,11 +11,20 @@
  */
 function %title%_theme($existing, $type, $theme, $path) {
   return array(
-    '%title%' => array(
-      'template' => '%title%',
-      'arguments' => array(),
-    ),
+    // '%title%' => array(
+    //   'template' => '%title%',
+    //   'arguments' => array(),
+    // ),
   );
+}
+
+/**
+ * Implementation of hook_imagecache_default_presets()
+ */
+function %title%_imagecache_default_presets() {
+  $presets = array();
+  // Put imagecache presets here.
+  return $presets;
 }
 
 /**
@@ -24,16 +33,9 @@ function %title%_theme($existing, $type, $theme, $path) {
 function %title%_menu() {
   $items = array();
 
-  $items['%title%'] = array(
-    'title' => '%Title%s',
-    'page callback' => '%title%_page',
-    'access arguments' => array('access content'),
-    'type' => MENU_NORMAL_ITEM,
-    'file' => '%title%.pages.inc',
-  );
   $items['admin/settings/%title%'] = array(
-    'title' => '%Title% settings',
-    'description' => 'Control %title%s and their hierarchy and change %title% settings.',
+    'title' => '%Title%',
+    'description' => 'Control the %Title% module settings.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('%title%_admin'),
     'access arguments' => array('access administration pages'),
@@ -41,6 +43,48 @@ function %title%_menu() {
   );
 
   return $items;
+}
+
+/**
+ * Implementation of hook_views_api()
+ */
+function %title%_views_api() {
+  return array(
+    'api' => 2,
+  );
+}
+
+/**
+ * Implementation of hook_views_default_views_alter()
+ */
+function %title%_views_default_views_alter(&$views) {
+  foreach (glob(drupal_get_path('module', '%title%') . '/views/overridden-*.inc') as $file) {
+    include($file);
+    $views[$view->name] = $view;
+  }
+}
+
+/**
+ * Implementation of hook_context_default_contexts()
+ **/
+function %title%_context_default_contexts() {
+  $contexts = array();
+
+  foreach (glob(drupal_get_path('module', '%title%') . '/contexts/*.inc') as $file) {
+    include($file);
+    $contexts[] = $context;
+  }
+
+  return $contexts;
+}
+
+/**
+ * Implementation of hook_ctools_plugin_api()
+ **/
+function %title%_ctools_plugin_api($module, $api) {
+  if ($module == 'page_manager' && $api == 'pages_default') {
+    return array('version' => 1);
+  }
 }
 
 /**
@@ -110,13 +154,16 @@ function %title%_nodeapi(&$node, $op, $teaser, $page) {
  */
 function %title%_form_alter(&$form, $form_state, $form_id) {
   if ($form_id == 'user_register') {
-    $form['%title%_extra_attr'] = array(
-      '#type' => 'textfield',
-      '#title' => t('%Title% extra attribute'),
-      '#size' => 60,
-      '#maxlength' => 255,
-      '#required' => FALSE,
-    );
+    // Alter the registration form here.
+  }
+
+  // Node page form alters
+  if (isset($form['type']) && isset($form['#node'])) {
+    if ($form['type']['#value'] .'_node_form' == $form_id) {
+      $node = $form['#node'];
+
+      // Alter the node form here.
+    }
   }
 }
 
@@ -168,44 +215,27 @@ function %title%_user($op, &$edit, &$account, $category = NULL) {
 function %title%_block($op = 'list', $delta = 0, $edit = array()) {
   switch ($op) {
     case 'list':
-      $blocks['latest_items']['info'] = t('Latest %title% items');
+      $blocks = array();
+      $blocks['example'] = array(
+        'info'  => t('%Title%: Example block'),
+        'cache' => BLOCK_CACHE_GLOBAL,
+      );
       return $blocks;
 
     case 'configure':
-      $form['%title%_block_num_'. $delta] = array(
-        '#type' => 'select',
-        '#title' => t('Number of items'),
-        '#default_value' => variable_get('%title%_block_num_'. $delta, '5'),
-        '#options' => drupal_map_assoc(array(2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20))
-      );
+      $form = array();
+      // Add a block configuration form here.
       return $form;
 
     case 'save':
-      variable_set('%title%_block_num_'. $delta, $edit['%title%_block_num_'. $delta]);
+      // Save values from the block configuration form here, eg:
+      // variable_set('%title%_block_' . $delta, $edit['%title%_block_' . $delta]);
       break;
 
     case 'view':
-      if (!user_access('access content')) {
-        return;
-      }
-
       switch ($delta) {
-        case 'latest_items':
-          $title = t('Latest %title% items');
-          $sql = db_rewrite_sql(
-            "SELECT nid, title, 
-             FROM {node}
-             ORDER BY updated DESC"
-          );
-          $result = db_query_range($sql, variable_get('%title%_block_num_' . $delta, '5'));
-          $content = node_title_list($result);
-          break;
-      }
-
-      if (!empty($content)) {
-        $block['subject'] = $title;
-        $block['content'] = $content . theme('more_link', url('%title%'), t('Read the latest %title% items.'));
-        return $block;
+        case 'example':
+          return array('subject' => t('Example block'), 'content' => "Example content.");
       }
   }
 }
